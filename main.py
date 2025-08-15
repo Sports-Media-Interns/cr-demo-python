@@ -1,4 +1,5 @@
 import os
+import logging
 import json
 import uvicorn
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
@@ -11,8 +12,19 @@ load_dotenv()
 
 # Configuration
 PORT = int(os.getenv("PORT", "8080"))
-DOMAIN = os.getenv("NGROK_URL")
+basicConfig(level=logging.INFO, filename='log.info', 
+filemode="%(actime)s - %(levelname)s - %(message)s") # Change 1 implement Logging 
+logging.debug("debug")
+logging.info("info")
+logging.warning("Warning")
+logging.error("error")
+logging.critical("critical")
+
+DOMAIN = os.getenv("NGROK_URL") # Change 2: Adds a safety check to public facing address
+if not DOMAIN:
+     raise ValueError("Missing NGROCK_URL in enviorment variables")
 WS_URL = f"wss://{DOMAIN}/ws"
+
 WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and Open A I . Ask me anything!"
 SYSTEM_PROMPT = "You are a helpful assistant. This conversation is being translated to voice, so answer carefully. When you respond, please spell out all numbers, for example twenty not 20. Do not include emojis in your responses. Do not include bullet points, asterisks, or special symbols."
 
@@ -25,13 +37,17 @@ sessions = {}
 # Create FastAPI app
 app = FastAPI()
 
-async def ai_response(messages):
+async def ai_response(messages): 
     """Get a response from OpenAI API"""
+    try: # Change three: Implement try except in case AI fails to respond to user 
     completion = openai.chat.completions.create(
         model="gpt-4o-mini",
         messages=messages
     )
     return completion.choices[0].message.content
+except Exeption as e:
+  logging.error("API ERROR", e)
+  return "I'm having trouble responding right now: Try again later"
 
 @app.post("/twiml")
 async def twiml_endpoint():
@@ -77,13 +93,14 @@ async def websocket_endpoint(websocket: WebSocket):
                         "last": True
                     })
                 )
-                print(f"Sent response: {response}")
+                logging.info(f"Sent response: {response}")
                 
             elif message["type"] == "interrupt":
-                print("Handling interruption.")
+                logging.info("Handling interruption.")
                 
             else:
-                print(f"Unknown message type received: {message['type']}")
+                logging.error(f"Unknown message type received: {message['type']}")
+                logging.info("Please Try again")
                 
     except WebSocketDisconnect:
         print("WebSocket connection closed")
@@ -92,4 +109,4 @@ async def websocket_endpoint(websocket: WebSocket):
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=PORT)
-    print(f"Server running at http://localhost:{PORT} and {WS_URL}")
+    logging.info(f"Server running at http://localhost:{PORT} and {WS_URL}")
