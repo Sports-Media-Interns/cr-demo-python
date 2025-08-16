@@ -12,6 +12,7 @@ load_dotenv()
 
 # Configuration
 PORT = int(os.getenv("PORT", "8080"))
+
 basicConfig(level=logging.INFO, filename='log.info', 
 filemode="%(actime)s - %(levelname)s - %(message)s") # Change 1 implement Logging 
 logging.debug("debug")
@@ -20,13 +21,18 @@ logging.warning("Warning")
 logging.error("error")
 logging.critical("critical")
 
-DOMAIN = os.getenv("NGROK_URL") # Change 2: Adds a safety check to public facing address
+DOMAIN = os.getenv("NGROK_URL") # Change 2: Adds a safety check to public public-facing address
 if not DOMAIN:
      raise ValueError("Missing NGROCK_URL in enviorment variables")
 WS_URL = f"wss://{DOMAIN}/ws"
 
-WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and Open A I . Ask me anything!"
-SYSTEM_PROMPT = "You are a helpful assistant. This conversation is being translated to voice, so answer carefully. When you respond, please spell out all numbers, for example twenty not 20. Do not include emojis in your responses. Do not include bullet points, asterisks, or special symbols."
+WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and OpenAI.. Ask me anything!"
+
+SYSTEM_PROMPT = ( "You are a helpful assistant. This conversation is being translated to voice, # Change 3: Fix formatting of System_prompt 
+so answer carefully. When you respond, please spell out all numbers, 
+for example, twenty, not 20. Do not include emojis in your responses. 
+Do not include bullet points, asterisks, or special symbols."
+)
 
 # Initialize OpenAI client
 openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -37,17 +43,17 @@ sessions = {}
 # Create FastAPI app
 app = FastAPI()
 
-async def ai_response(messages): 
+async def ai_response(messages):
     """Get a response from OpenAI API"""
-    try: # Change three: Implement try except in case AI fails to respond to user 
-    completion = openai.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=messages
-    )
-    return completion.choices[0].message.content
-except Exeption as e:
-  logging.error("API ERROR", e)
-  return "I'm having trouble responding right now: Try again later"
+    try: # Change four: Try except in case AI fails to respond 
+        completion = openai.chat.completions.create( 
+            model="gpt-4o-mini",
+            messages=messages
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        logging.exception("API Error")
+        return "I'm having trouble responding right now. Please try again later."
 
 @app.post("/twiml")
 async def twiml_endpoint():
