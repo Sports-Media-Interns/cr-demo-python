@@ -27,12 +27,13 @@ if not DOMAIN:
 WS_URL = f"wss://{DOMAIN}/ws"
 
 WELCOME_GREETING = "Hi! I am a voice assistant powered by Twilio and OpenAI.. Ask me anything!"
-
-SYSTEM_PROMPT = ( "You are a helpful assistant. This conversation is being translated to voice, # Change 3: Fix formatting of System_prompt 
-so answer carefully. When you respond, please spell out all numbers, 
-for example, twenty, not 20. Do not include emojis in your responses. 
-Do not include bullet points, asterisks, or special symbols."
+ 
+SYSTEM_PROMPT = ( # Change three: Fixed system_prompt formatting
+    "You are a helpful assistant. This conversation is being translated to voice."
+    "So answer carefully. When you respond, please spell out all numbers, for example, twenty, not 20. "
+    "Do not include emojis in your responses. Do not include bullet points, asterisks, or special symbols."
 )
+
 
 # Initialize OpenAI client
 openai = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
